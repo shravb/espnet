@@ -46,22 +46,25 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     log "stage1: Download data to ${COMMONVOICE}"
     log "The default data of this recipe is from commonvoice 5.1, for newer version, you need to register at \
          https://commonvoice.mozilla.org/"
-    local/download_and_untar.sh ${COMMONVOICE} ${data_url} ${lang}.tar.gz
+    local/download_and_untar.sh ${COMMONVOICE} ${data_url} pansori-tedxkr-corpus-1.0.tar.gz
 fi
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     log "stage2: Preparing data for commonvoice"
     ### Task dependent. You have to make data the following preparation part by yourself.
-    for part in "validated" "test" "dev"; do
+    for part in "train" "test" "dev"; do
         # use underscore-separated names in data directories.
-        local/data_prep.pl "${COMMONVOICE}/cv-corpus-5.1-2020-06-22/${lang}" ${part} data/"$(echo "${part}_${lang}" | tr - _)"
+          local/data_prep.pl "${COMMONVOICE}/pansori-tedxkr-corpus-1.0/" ${part} data/"$(echo "${part}_${lang}" | tr - _)"
+
     done
 
+    local/data_prep.pl "${COMMONVOICE}/pansori-tedxkr-corpus-1.0/" ${part} data/"$(echo "${part}_${lang}" | tr - _)"
+
     # remove test&dev data from validated sentences
-    utils/copy_data_dir.sh data/"$(echo "validated_${lang}" | tr - _)" data/${train_set}
-    utils/filter_scp.pl --exclude data/${train_dev}/wav.scp data/${train_set}/wav.scp > data/${train_set}/temp_wav.scp
-    utils/filter_scp.pl --exclude data/${test_set}/wav.scp data/${train_set}/temp_wav.scp > data/${train_set}/wav.scp
-    utils/fix_data_dir.sh data/${train_set}
+    # utils/copy_data_dir.sh data/"$(echo "validated_${lang}" | tr - _)" data/${train_set}
+    # utils/filter_scp.pl --exclude data/${train_dev}/wav.scp data/${train_set}/wav.scp > data/${train_set}/temp_wav.scp
+    # utils/filter_scp.pl --exclude data/${test_set}/wav.scp data/${train_set}/temp_wav.scp > data/${train_set}/wav.scp
+    # utils/fix_data_dir.sh data/${train_set}
 fi
 
 log "Successfully finished. [elapsed=${SECONDS}s]"
